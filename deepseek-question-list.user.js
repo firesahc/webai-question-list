@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
-// @namespace    https://github.com/firesahc/deepseek-question-list
-// @version      1.8.0
+// @namespace    https://github.com/firesahc/webai-question-list
+// @version      1.8.1
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
