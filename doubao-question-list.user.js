@@ -1,15 +1,13 @@
 // ==UserScript==
 // @name         doubao-question-list
-// @namespace    https://github.com/firesahc/doubao-question-list
-// @version      1.0.0
+// @namespace    https://github.com/firesahc/webai-question-list
+// @version      1.1.0
 // @description  展示网页版doubao当前对话的所有提问
 // @author       firesahc
 // @match        https://www.doubao.com/*
 // @license      MIT
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @downloadURL https://update.greasyfork.org/scripts/555503/doubao-question-list.user.js
-// @updateURL https://update.greasyfork.org/scripts/555503/doubao-question-list.meta.js
 // ==/UserScript==
 
 let observer = null;
@@ -294,7 +292,7 @@ function addQuestionCollapseButtons(){
             questionElement.style.display = 'block';
             toggleButton.textContent = '▼';
         } else {
-            questionElement.style.display = 'none';
+            questionElement。style.display = 'none';
             toggleButton.textContent = '▲';
         };
     });
@@ -359,13 +357,13 @@ function createListItem(item, index) {
 
     const textContent = item.targetElement.textContent?.trim() || '';
     contentPreview.textContent = textContent ?
-        (textContent.length > 120 ?
+        (textContent。length > 120 ?
              textContent.substring(0, 120) + '...' :
              textContent
         ) :
         '[空内容]';
 
-    listItem.appendChild(indexInfo);
+    listItem。appendChild(indexInfo);
     listItem.appendChild(contentPreview);
 
     //点击跳转到问题起始
