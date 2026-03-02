@@ -26,6 +26,7 @@ function createParserInit() {
         gap: 8px;
         overflow-y: auto;
         z-index: 1000;
+        background: white;
         font-family: Arial, sans-serif;
         font-size: 14px;
         display: flex;
@@ -62,7 +63,7 @@ function createParserInit() {
         if (targetContainer) {
             targetContainer.appendChild(listContainer);
         }
-    }, 350)
+    }， 400)
 }
 
 function startObservation(contentArea) {
@@ -85,7 +86,7 @@ function startObservation(contentArea) {
             // 情况2: 检测到滚动区域的变化，且涉及 dad65929 节点
             if (mutation.type === 'childList' &&
                 typeof targetClass === 'string' &&
-                targetClass.includes('_0f72b0b') &&
+                targetClass.includes('ca1ef5b2') &&
                 targetClass.includes('ds-scroll-area')) {
                 // 检查添加的节点
                 if (mutation.addedNodes.length > 0) {
@@ -138,7 +139,7 @@ function startObservation(contentArea) {
     });
 
     // 获取目标元素
-    const targetElement = document.querySelector('._0f72b0b.ds-scroll-area');
+    const targetElement = document.querySelector('.ca1ef5b2.ds-scroll-area');
     if (!targetElement) {
         return false;
     }
@@ -294,7 +295,7 @@ function addQuestionCollapseButtons(){
         toggleButton.style.cssText = `
             position: absolute;
             bottom: 0; 
-            left: 50%; /* 水平居中定位 */
+            left: 5%;
             transform: translateX(-50%); /* 水平居中调整 */
             z-index: 1000;
             padding: 8px 20px;
