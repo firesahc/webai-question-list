@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         doubao-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.1.0
+// @version      1.1.1
 // @description  展示网页版doubao当前对话的所有提问
 // @author       firesahc
 // @match        https://www.doubao.com/*
@@ -395,7 +395,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
     listContainer.style.padding = isContentVisible ? '6px' : '0px';
     listContainer.style.border = isContentVisible ? '2px solid #f5f5f5' : '';
     listContainer.style.position =isContentVisible ? '':' fixed';
-    listContainer.style.width=isContentVisible ? '240px':' 100px';
+    listContainer.style.width=isContentVisible ? '280px':' 100px';
 
     const parseButton = createButton(isObserving? '停止解析':'开始解析', '#2196F3', '#1976D2', () => {
         if (isObserving) {
@@ -425,7 +425,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
         listContainer.style.padding = isContentVisible ? '6px' : '0px';
         listContainer.style.border = isContentVisible ? '2px solid #f5f5f5' : '';
         listContainer.style.position =isContentVisible ? '':' fixed';
-        listContainer.style.width=isContentVisible ? '240px':' 100px';
+        listContainer.style.width=isContentVisible ? '280px':' 100px';
         // 将新的 isContentVisible 值保存到油猴存储中
         GM_setValue('isContentVisible', isContentVisible);
     });
