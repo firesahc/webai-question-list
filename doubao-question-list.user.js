@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         doubao-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.1.1
+// @version      1.2.0
 // @description  展示网页版doubao当前对话的所有提问
 // @author       firesahc
 // @match        https://www.doubao.com/*
@@ -143,7 +143,7 @@ function stopObservation() {
 function parseElements(contentArea) {
     try {
         contentArea.innerHTML = '';
-        const targetElements = document.getElementsByClassName('container-QQkdo4 bg-s-color-bg-trans rounded-s-radius-s text-s-color-text-secondary s-font-base sm:text-15 max-w-450 px-16 py-9 w-fit min-w-0 !text-[length:var(--message-send-text-content-font-size,16px)]');
+        const targetElements = document.getElementsByClassName('container-QQkdo4 bg-s-color-bg-trans rounded-s-radius-s text-s-color-text-secondary s-font-base sm:text-15 max-w-450 px-16 py-9 w-fit min-w-0');
         if (targetElements.length === 0) {
             return;
         }
@@ -292,7 +292,7 @@ function addQuestionCollapseButtons(){
             questionElement.style.display = 'block';
             toggleButton.textContent = '▼';
         } else {
-            questionElement。style.display = 'none';
+            questionElement.style.display = 'none';
             toggleButton.textContent = '▲';
         };
     });
@@ -357,13 +357,13 @@ function createListItem(item, index) {
 
     const textContent = item.targetElement.textContent?.trim() || '';
     contentPreview.textContent = textContent ?
-        (textContent。length > 120 ?
+        (textContent.length > 120 ?
              textContent.substring(0, 120) + '...' :
              textContent
         ) :
         '[空内容]';
 
-    listItem。appendChild(indexInfo);
+    listItem.appendChild(indexInfo);
     listItem.appendChild(contentPreview);
 
     //点击跳转到问题起始
