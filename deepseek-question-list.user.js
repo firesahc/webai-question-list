@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.8.1
+// @version      1.9.0
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
@@ -63,7 +63,7 @@ function createParserInit() {
         if (targetContainer) {
             targetContainer.appendChild(listContainer);
         }
-    }， 400)
+    }, 400)
 }
 
 function startObservation(contentArea) {
@@ -75,25 +75,24 @@ function startObservation(contentArea) {
             // 检查目标元素的类名
             const targetClass = mutation.target.className;
             
-            // 情况1: 直接检测到 dad65929 的变化
+            // 情况1: 直接检测到 ds-virtual-list-visible-items 的变化
             if (mutation.type === 'childList' &&
                 typeof targetClass === 'string' &&
-                targetClass.includes('dad65929')) {
+                targetClass.includes('ds-virtual-list-visible-items')) {
                 shouldParse = true;
                 break;
             }
             
-            // 情况2: 检测到滚动区域的变化，且涉及 dad65929 节点
+            // 情况2: 检测到滚动区域的变化，且涉及 ds-virtual-list-visible-items 节点
             if (mutation.type === 'childList' &&
                 typeof targetClass === 'string' &&
-                targetClass.includes('ca1ef5b2') &&
-                targetClass.includes('ds-scroll-area')) {
+                targetClass.includes('ds-virtual-list-items')) {
                 // 检查添加的节点
                 if (mutation.addedNodes.length > 0) {
                     for (const node of mutation.addedNodes) {
                         if (node.nodeType === Node.ELEMENT_NODE &&
                             node.classList &&
-                            node.classList.contains('dad65929')) {
+                            node.classList.contains('ds-virtual-list-visible-items')) {
                             shouldParse = true;
                             break;
                         }
@@ -104,7 +103,7 @@ function startObservation(contentArea) {
                     for (const node of mutation.removedNodes) {
                         if (node.nodeType === Node.ELEMENT_NODE &&
                             node.classList &&
-                            node.classList.contains('dad65929')) {
+                            node.classList.contains('ds-virtual-list-visible-items')) {
                             shouldParse = true;
                             break;
                         }
@@ -139,7 +138,7 @@ function startObservation(contentArea) {
     });
 
     // 获取目标元素
-    const targetElement = document.querySelector('.ca1ef5b2.ds-scroll-area');
+    const targetElement = document.querySelector('._765a5cd.ds-scroll-area');
     if (!targetElement) {
         return false;
     }
