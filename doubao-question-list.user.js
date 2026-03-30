@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         doubao-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.2.0
+// @version      1.3.0
 // @description  展示网页版doubao当前对话的所有提问
 // @author       firesahc
 // @match        https://www.doubao.com/*
@@ -63,6 +63,9 @@ function createParserInit() {
         if (targetContainer) {
             targetContainer.appendChild(listContainer);
         }
+        else {
+            console.error("未找到框架元素class=\"flex-1 flex relative main-with-nav-qPJ0z0\"");
+        }
     }, 1500)
 }
 
@@ -95,7 +98,7 @@ function startObservation(contentArea) {
         if (shouldParse) {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                const messageElements = parseElements(contentArea);
+                const messageElements = parseElements();
                 contentArea.innerHTML = '';
                 addListMessages(contentArea, messageElements);
 
@@ -109,7 +112,8 @@ function startObservation(contentArea) {
     const targetElements = Array.from(
         document.getElementsByClassName('w-full flex-shrink flex-grow basis-0 min-h-100 flex items-center flex-col')
     );
-    if (targetElements<1) {
+    if (targetElements === 0) {
+        console.error("未找到监听元素class=\"w-full flex-shrink flex-grow basis-0 min-h-100 flex items-center flex-col\"");
         return false;
     }
 
@@ -140,11 +144,11 @@ function stopObservation() {
     }
 }
 
-function parseElements(contentArea) {
+function parseElements() {
     try {
-        contentArea.innerHTML = '';
-        const targetElements = document.getElementsByClassName('container-QQkdo4 bg-s-color-bg-trans rounded-s-radius-s text-s-color-text-secondary s-font-base sm:text-15 max-w-450 px-16 py-9 w-fit min-w-0');
+        const targetElements = document.querySelectorAll('[data-testid="message_text_content"]:not([data-show-indicator])');
         if (targetElements.length === 0) {
+            console.error("未找到问题元素[data-testid=\"message_text_content\"]:not([data-show-indicator])");
             return;
         }
 
@@ -247,7 +251,8 @@ function addQuestionCollapseButtons(){
     const questionElements = Array.from(
         document.getElementsByClassName('pl-16 pr-7 flex-shrink-0')
     );
-    if(questionElements.length<1){
+    if(questionElements.length === 0){
+        console.error("未找到输入框框架元素class=\"pl-16 pr-7 flex-shrink-0\"");
         return;
     }
     const questionElement = questionElements[0];
@@ -256,6 +261,7 @@ function addQuestionCollapseButtons(){
     // 获取目标容器元素
     const containerElement = document.querySelector('.flex.min-w-0.flex-grow.flex-col');
     if (!containerElement) {
+        console.error("未找到输入框元素class=\"flex.min-w-0.flex-grow.flex-col\"");
         return;
     } else {
         toggleButton.textContent = '▼';
@@ -408,7 +414,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
             if (success) {
                 parseButton.textContent = '停止解析';
                 // 立即执行一次解析
-                const messageElements = parseElements(contentArea);
+                const messageElements = parseElements();
                 contentArea.innerHTML = '';
                 addListMessages(contentArea, messageElements);
 
@@ -473,7 +479,7 @@ window.createParser = createParserInit;
 window.parseTarget = function() {
     const contentArea = document.getElementById('xpath-list-content');
     if (contentArea) {
-        const messageElements = parseElements(contentArea);
+        const messageElements = parseElements();
         contentArea.innerHTML = '';
         addListMessages(contentArea, messageElements);
 
