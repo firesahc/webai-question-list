@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.9.0
+// @version      1.10.0
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
@@ -63,7 +63,10 @@ function createParserInit() {
         if (targetContainer) {
             targetContainer.appendChild(listContainer);
         }
-    }, 400)
+        else {
+            console.error("未找到框架元素class=\"c3ecdb44\"");
+        }
+    }, 500)
 }
 
 function startObservation(contentArea) {
@@ -127,7 +130,7 @@ function startObservation(contentArea) {
         if (shouldParse) {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                const messageElements = parseElements(contentArea);
+                const messageElements = parseElements();
                 contentArea.innerHTML = '';
                 addListMessages(contentArea, messageElements);
 
@@ -140,6 +143,7 @@ function startObservation(contentArea) {
     // 获取目标元素
     const targetElement = document.querySelector('._765a5cd.ds-scroll-area');
     if (!targetElement) {
+        console.error("未找到监听元素class=\"_765a5cd.ds-scroll-area\"");
         return false;
     }
     
@@ -170,11 +174,11 @@ function stopObservation() {
     }
 }
 
-function parseElements(contentArea) {
+function parseElements() {
     try {
-        contentArea.innerHTML = '';
         const targetElements = document.querySelectorAll('.fbb737a4');
         if (targetElements.length === 0) {
+            console.error("未找到问题元素class=\"fbb737a4\"");
             return;
         }
 
@@ -276,6 +280,7 @@ function addQuestionCollapseButtons(){
     // 尝试查找目标元素
     const questionElement = document.querySelector('._871cbca');
     if (!questionElement) {
+        console.error("未找到输入框框架元素class=\"_871cbca\"");
         return;
     }
     
@@ -283,6 +288,7 @@ function addQuestionCollapseButtons(){
     // 获取目标容器元素
     const containerElement = document.querySelector('._7780f2e');
     if (!containerElement) {
+        console.error("未找到输入框元素class=\"_7780f2e\"");
         return;
     } else {
         toggleButton.textContent = '▼';
@@ -435,7 +441,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
             if (success) {
                 parseButton.textContent = '停止解析';
                 // 立即执行一次解析
-                const messageElements = parseElements(contentArea);
+                const messageElements = parseElements();
                 contentArea.innerHTML = '';
                 addListMessages(contentArea, messageElements);
 
@@ -500,7 +506,7 @@ window.createParser = createParserInit;
 window.parseTarget = function() {
     const contentArea = document.getElementById('xpath-list-content');
     if (contentArea) {
-        const messageElements = parseElements(contentArea);
+        const messageElements = parseElements();
         contentArea.innerHTML = '';
         addListMessages(contentArea, messageElements);
 
