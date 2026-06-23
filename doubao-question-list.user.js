@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         doubao-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.3.0
+// @version      1.5.0
 // @description  展示网页版doubao当前对话的所有提问
 // @author       firesahc
 // @match        https://www.doubao.com/*
@@ -32,13 +32,9 @@ function createParserInit() {
         display: flex;
         flex-direction: column;
     `;
-
-    const topButtonBar = document.createElement('div');
-    topButtonBar.style.cssText = `
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    `;
+    listContainer.style.width = '280px';
+    listContainer.style.padding = '6px';
+    listContainer.style.border = '2px solid #f5f5f5';
 
     const contentArea = document.createElement('div');
     contentArea.id = 'xpath-list-content';
@@ -48,17 +44,17 @@ function createParserInit() {
         padding: 4px;
     `;
 
-    addTopButtons(topButtonBar, listContainer, contentArea);
-
-    listContainer.appendChild(topButtonBar);
     listContainer.appendChild(contentArea);
 
-    // 延迟启动观察器
+    // 将按钮注入豆包原生顶部工具栏
+    injectHeaderButtons(listContainer, contentArea);
+
+    // 延迟启动观察器并将面板挂载到页面
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
         addQuestionCollapseButtons();
 
-        // 将列表框添加到 class="flex-1 flex relative main-with-nav-qPJ0z0" 的元素内部
+        // 将面板添加到 class="flex-1 flex relative main-with-nav-qPJ0z0" 的元素内部
         const targetContainer = document.querySelector('.flex-1.flex.relative.main-with-nav-qPJ0z0');
         if (targetContainer) {
             targetContainer.appendChild(listContainer);
@@ -78,18 +74,18 @@ function startObservation(contentArea) {
             // 检查目标元素的类名
             const targetClass = mutation.target.className;
 
-            // 情况1: 直接检测到 inter-H_fm37 的变化
+            // 检测到消息列表区域的变化（Doubao 新版使用 message-list-zLoNs1）
             if (mutation.type === 'childList' &&
                 typeof targetClass === 'string' &&
-                targetClass.includes('inter-H_fm37')) {
+                (targetClass.includes('message-list-zLoNs1') || targetClass.includes('inner-item-BjaxFt'))) {
                 shouldParse = true;
                 break;
             }
 
-            // 情况2: 检测到滚动区域的变化
+            // 检测到滚动区域的变化
             if (mutation.type === 'attributes' &&
                 typeof targetClass === 'string' &&
-                targetClass.includes('message-list-S2Fv2S')) {
+                targetClass.includes('message-list-zLoNs1')) {
                 shouldParse = true;
                 break;
             }
@@ -146,9 +142,17 @@ function stopObservation() {
 
 function parseElements() {
     try {
-        const targetElements = document.querySelectorAll('[data-testid="message_text_content"]:not([data-show-indicator])');
+        // 尝试旧版选择器（向后兼容）
+        let targetElements = document.querySelectorAll('[data-testid="message_text_content"]:not([data-show-indicator])');
+
+        // 如果旧版选择器无结果，使用新版选择器
         if (targetElements.length === 0) {
-            console.error("未找到问题元素[data-testid=\"message_text_content\"]:not([data-show-indicator])");
+            // 新版Doubao使用 data-message-id 标识消息容器
+            targetElements = document.querySelectorAll('[data-message-id]');
+        }
+
+        if (targetElements.length === 0) {
+            console.error("未找到消息元素（data-testid 和 data-message-id 均无匹配）");
             return;
         }
 
@@ -165,6 +169,7 @@ function parseElements() {
             return messageElements;
         }
     } catch (error) {
+        console.error("parseElements error:", error);
         return;
     }
 }
@@ -178,18 +183,28 @@ function addElementCollapseButtons(messageElements) {
             return;
         }
 
+        // 找到实际的内容元素（新版可能是 [data-message-id] 容器，需要找到内部内容元素）
+        let contentElement = element;
+        if (element.hasAttribute('data-message-id')) {
+            // 新版结构：尝试找到内部内容元素
+            contentElement = element.querySelector('.container-P2rR72') ||  // AI回复内容
+                            element.querySelector('[data-container-type] > div > div') ||  // 用户消息内容
+                            element.querySelector('[data-container-type] > div') ||
+                            element;
+        }
+
         // 如果内容高度不超过400px，不需要添加收起按钮
-        if (element.scrollHeight <= 400) {
+        if (contentElement.scrollHeight <= 400) {
             return;
         }
 
-        // 标记已添加按钮
+        // 标记已添加按钮（在原始element上标记，避免重复添加）
         element.setAttribute('data-collapse-button-added', 'true');
 
-        // 确保元素有相对定位，以便按钮可以绝对定位
-        const originalPosition = element.style.position;
+        // 确保内容元素有相对定位，以便按钮可以绝对定位
+        const originalPosition = contentElement.style.position;
         if (!originalPosition || originalPosition === 'static') {
-            element.style.position = 'relative';
+            contentElement.style.position = 'relative';
         }
 
         // 创建收起按钮
@@ -212,8 +227,8 @@ function addElementCollapseButtons(messageElements) {
         `;
 
         // 存储原始高度和溢出状态
-        const originalHeight = element.style.height;
-        const originalOverflow = element.style.overflow;
+        const originalHeight = contentElement.style.height;
+        const originalOverflow = contentElement.style.overflow;
         let isCollapsed = false;
 
         collapseButton.addEventListener('mouseenter', () => {
@@ -228,21 +243,21 @@ function addElementCollapseButtons(messageElements) {
             e.stopPropagation();
             if (isCollapsed) {
                 // 展开
-                element.style.height = originalHeight || '';
-                element.style.overflow = originalOverflow || '';
+                contentElement.style.height = originalHeight || '';
+                contentElement.style.overflow = originalOverflow || '';
                 collapseButton.textContent = '收起';
                 isCollapsed = false;
             } else {
                 // 收起
-                element.style.height = '110px';
-                element.style.overflow = 'hidden';
+                contentElement.style.height = '110px';
+                contentElement.style.overflow = 'hidden';
                 collapseButton.textContent = '展开';
                 isCollapsed = true;
             }
         });
 
-        // 添加按钮到元素
-        element.appendChild(collapseButton);
+        // 添加按钮到内容元素
+        contentElement.appendChild(collapseButton);
     });
 }
 
@@ -320,6 +335,21 @@ function addListMessages(contentArea, messageElements) {
     contentArea.appendChild(list);
 }
 
+function getCleanTextContent(element) {
+    // 如果是新版 [data-message-id] 容器，尝试提取内部内容元素的文本
+    if (element.hasAttribute('data-message-id')) {
+        // 优先从 AI 回复内容容器提取
+        const aiContent = element.querySelector('.container-P2rR72');
+        if (aiContent) return aiContent.textContent;
+
+        // 用户消息：从内容容器中提取，排除操作栏
+        const contentDiv = element.querySelector('[data-container-type] > div');
+        if (contentDiv) return contentDiv.textContent;
+    }
+    // 回退：直接使用元素的 textContent
+    return element.textContent;
+}
+
 function createListItem(item, index) {
     const listItem = document.createElement('li');
     listItem.style.cssText = `
@@ -361,7 +391,8 @@ function createListItem(item, index) {
         border: 1px solid #e0e0e0;
     `;
 
-    const textContent = item.targetElement.textContent?.trim() || '';
+    // 获取干净的文本内容（新版 [data-message-id] 容器可能包含操作栏等噪声文本）
+    const textContent = getCleanTextContent(item.targetElement)?.trim() || '';
     contentPreview.textContent = textContent ?
         (textContent.length > 120 ?
              textContent.substring(0, 120) + '...' :
@@ -380,93 +411,117 @@ function createListItem(item, index) {
     return listItem;
 }
 
-function addTopButtons(buttonContainer, listContainer, contentArea) {
-    const buttonStyle = `
-        padding: 6px 6px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: bold;
-        transition: all 0.2s ease;
-        flex: 1;
-        min-width: 30px;
-    `;
+// 将控制按钮注入豆包原生顶部工具栏右侧
+function injectHeaderButtons(listContainer, contentArea) {
+    // 多次尝试查找工具栏（SPA 页面可能延迟渲染）
+    let attempts = 0;
+    const maxAttempts = 20;
 
-    // 从油猴存储中读取 isContentVisible 的值，默认值为 true（显示状态）
+    function tryInject() {
+        const headerRight = document.querySelector('[class*="flex-g-header-right-flex-grow"]');
+        if (headerRight && !headerRight.querySelector('.dq-plugin-btn')) {
+            createHeaderButtons(headerRight, listContainer, contentArea);
+            return;
+        }
+        attempts++;
+        if (attempts < maxAttempts) {
+            setTimeout(tryInject, 400);
+        } else {
+            console.error("未找到豆包顶部工具栏，按钮未能注入");
+        }
+    }
+
+    tryInject();
+}
+
+function createHeaderButtons(headerRight, listContainer, contentArea) {
+    // 从存储读取列表可见性
     let isContentVisible = GM_getValue('isContentVisible', true);
 
-    // 根据存储的值初始化内容区域的显示状态
-    contentArea.style.display = isContentVisible ? 'block' : 'none';
-    listContainer.style.padding = isContentVisible ? '6px' : '0px';
-    listContainer.style.border = isContentVisible ? '2px solid #f5f5f5' : '';
-    listContainer.style.position =isContentVisible ? '':' fixed';
-    listContainer.style.width=isContentVisible ? '280px':' 100px';
+    // 初始状态
+    listContainer.style.display = isContentVisible ? 'flex' : 'none';
 
-    const parseButton = createButton(isObserving? '停止解析':'开始解析', '#2196F3', '#1976D2', () => {
+    // 创建解析按钮
+    const parseBtn = document.createElement('button');
+    parseBtn.className = 'dq-plugin-btn';
+    parseBtn.textContent = isObserving ? '停止' : '解析';
+    Object.assign(parseBtn.style, {
+        padding: '4px 12px',
+        height: '32px',
+        border: '1px solid var(--dbx-line-10, #e5e5e5)',
+        borderRadius: '8px',
+        background: 'transparent',
+        color: 'var(--dbx-text-secondary, #666)',
+        fontSize: '13px',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap',
+        flexShrink: '0',
+    });
+
+    parseBtn.addEventListener('mouseenter', () => {
+        parseBtn.style.background = 'var(--dbx-fill-trans-10-hover, rgba(0,0,0,0.05))';
+    });
+    parseBtn.addEventListener('mouseleave', () => {
+        parseBtn.style.background = 'transparent';
+    });
+    parseBtn.addEventListener('click', () => {
         if (isObserving) {
-            // 停止解析
             stopObservation();
-            parseButton.textContent = '开始解析';
+            parseBtn.textContent = '解析';
+            parseBtn.style.color = 'var(--dbx-text-secondary, #666)';
         } else {
-            // 开始解析
             const success = startObservation(contentArea);
             if (success) {
-                parseButton.textContent = '停止解析';
-                // 立即执行一次解析
+                parseBtn.textContent = '停止';
+                parseBtn.style.color = 'var(--dbx-text-brand, #4A6CF7)';
                 const messageElements = parseElements();
                 contentArea.innerHTML = '';
                 addListMessages(contentArea, messageElements);
-
-                // 为每个目标元素添加收起按钮（仅当内容较长时）
                 addElementCollapseButtons(messageElements);
             }
         }
     });
 
-    const toggleButton = createButton(isContentVisible ? '隐藏列表' : '显示列表', '#FF9800', '#F57C00', () => {
+    // 初始化解析按钮状态
+    if (isObserving) {
+        parseBtn.textContent = '停止';
+        parseBtn.style.color = 'var(--dbx-text-brand, #4A6CF7)';
+    }
+
+    // 创建列表切换按钮
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'dq-plugin-btn';
+    toggleBtn.textContent = isContentVisible ? '列表' : '列表';
+    Object.assign(toggleBtn.style, {
+        padding: '4px 12px',
+        height: '32px',
+        border: '1px solid var(--dbx-line-10, #e5e5e5)',
+        borderRadius: '8px',
+        background: 'transparent',
+        color: isContentVisible ? 'var(--dbx-text-brand, #4A6CF7)' : 'var(--dbx-text-secondary, #666)',
+        fontSize: '13px',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap',
+        flexShrink: '0',
+    });
+
+    toggleBtn.addEventListener('mouseenter', () => {
+        toggleBtn.style.background = 'var(--dbx-fill-trans-10-hover, rgba(0,0,0,0.05))';
+    });
+    toggleBtn.addEventListener('mouseleave', () => {
+        toggleBtn.style.background = 'transparent';
+    });
+    toggleBtn.addEventListener('click', () => {
         isContentVisible = !isContentVisible;
-        toggleButton.textContent = isContentVisible ? '隐藏列表' : '显示列表';
-        contentArea.style.display = isContentVisible ? 'block' : 'none';
-        listContainer.style.padding = isContentVisible ? '6px' : '0px';
-        listContainer.style.border = isContentVisible ? '2px solid #f5f5f5' : '';
-        listContainer.style.position =isContentVisible ? '':' fixed';
-        listContainer.style.width=isContentVisible ? '280px':' 100px';
-        // 将新的 isContentVisible 值保存到油猴存储中
+        listContainer.style.display = isContentVisible ? 'flex' : 'none';
+        toggleBtn.style.color = isContentVisible ? 'var(--dbx-text-brand, #4A6CF7)' : 'var(--dbx-text-secondary, #666)';
         GM_setValue('isContentVisible', isContentVisible);
     });
 
-    buttonContainer.appendChild(parseButton);
-    buttonContainer.appendChild(toggleButton);
-}
-
-function createButton(text, bgColor, hoverColor, clickHandler) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.style.cssText = `
-        padding: 6px 6px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: bold;
-        transition: all 0.2s ease;
-        flex: 1;
-        min-width: 30px;
-        background: ${bgColor};
-        color: white;
-    `;
-
-    button.addEventListener('mouseenter', () => {
-        button.style.background = hoverColor;
-    });
-
-    button.addEventListener('mouseleave', () => {
-        button.style.background = bgColor;
-    });
-
-    button.addEventListener('click', clickHandler);
-    return button;
+    headerRight.appendChild(parseBtn);
+    headerRight.appendChild(toggleBtn);
 }
 
 if (document.readyState === 'loading') {
