@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.16.1
+// @version      1.17.0
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
@@ -450,16 +450,16 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
     const stopIcon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/><rect x="4.8" y="4.8" width="6.4" height="6.4" rx="1.2" fill="currentColor"/></svg>';
 
     const parseButton = createCapsuleButton(
-        isObserving ? stopIcon + '停止' : playIcon + '解析',
+        isObserving ? stopIcon + '<span class="q-list-btn-label">停止</span>' : playIcon + '<span class="q-list-btn-label">解析</span>',
         true,
         () => {
             if (isObserving) {
                 stopObservation();
-                parseButton.innerHTML = playIcon + '解析';
+                parseButton.innerHTML = playIcon + '<span class="q-list-btn-label">解析</span>';
             } else {
                 const success = startObservation(contentArea);
                 if (success) {
-                    parseButton.innerHTML = stopIcon + '停止';
+                    parseButton.innerHTML = stopIcon + '<span class="q-list-btn-label">停止</span>';
                     const messageElements = parseElements();
                     if (messageElements.length > 0) {
                         contentArea.innerHTML = '';
@@ -497,39 +497,55 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
 }
 
 function applyCollapsedState(listContainer, contentArea, buttonContainer) {
-    // 脱离文档流 → 浮动小按钮栏
+    // ── 仿 DeepSeek .e5bf614e 胶囊容器 ──
     listContainer.style.position = 'fixed';
+    listContainer.style.top = '12px';
+    listContainer.style.right = '16px';
     listContainer.style.width = 'auto';
-    listContainer.style.minWidth = '100px';
+    listContainer.style.minWidth = '';
     listContainer.style.maxHeight = 'none';
-    listContainer.style.padding = '4px 8px';
-    listContainer.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)';
-    listContainer.style.borderRadius = '8px';
+    listContainer.style.height = '40px';
+    listContainer.style.padding = '0 4px';
+    listContainer.style.borderRadius = '100px';
+    listContainer.style.border = '1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.08))';
+    listContainer.style.background = 'var(--dsw-alias-bg-layer-3, #fff)';
+    listContainer.style.boxShadow = '0 4px 12px rgba(0,0,0,.04)';
     listContainer.style.overflowY = 'visible';
-    listContainer.style.background = 'var(--dsw-specific-sidebar-fill, #f9fafb)';
-    listContainer.style.backdropFilter = 'blur(8px)';
-    listContainer.style.webkitBackdropFilter = 'blur(8px)';
+    listContainer.style.backdropFilter = '';
+    listContainer.style.webkitBackdropFilter = '';
+    listContainer.style.display = 'flex';
+    listContainer.style.flexDirection = 'row';
+    listContainer.style.alignItems = 'center';
     contentArea.style.display = 'none';
     buttonContainer.style.flexDirection = 'row';
     buttonContainer.style.borderBottom = 'none';
     buttonContainer.style.paddingBottom = '0';
     buttonContainer.style.marginBottom = '0';
-    buttonContainer.style.gap = '4px';
-    // 两个按钮都显示（水平排列）
-    if (buttonContainer.children[0]) buttonContainer.children[0].style.display = '';
-    if (buttonContainer.children[1]) buttonContainer.children[1].style.display = '';
+    buttonContainer.style.gap = '2px';
+    // 隐藏按钮文字，仅显示图标
+    listContainer.querySelectorAll('.q-list-btn-label').forEach(function(el) { el.style.display = 'none'; });
+    // 调整按钮内边距（更紧凑）
+    if (buttonContainer.children[0]) buttonContainer.children[0].style.padding = '0 5px';
+    if (buttonContainer.children[1]) buttonContainer.children[1].style.padding = '0 3px';
 }
 
 function applyExpandedState(listContainer, contentArea, buttonContainer) {
     // 回到文档流 → flex 子元素，占据右侧栏位
     listContainer.style.position = '';
+    listContainer.style.top = '';
+    listContainer.style.right = '';
     listContainer.style.width = '260px';
     listContainer.style.minWidth = '';
     listContainer.style.maxHeight = '100vh';
+    listContainer.style.height = '';
     listContainer.style.padding = '6px 12px 10px';
     listContainer.style.boxShadow = 'none';
     listContainer.style.borderRadius = '';
+    listContainer.style.border = '';
     listContainer.style.overflowY = 'auto';
+    listContainer.style.display = '';
+    listContainer.style.flexDirection = '';
+    listContainer.style.alignItems = '';
     listContainer.style.background = 'var(--dsw-specific-sidebar-fill, #f9fafb)';
     listContainer.style.backdropFilter = '';
     listContainer.style.webkitBackdropFilter = '';
@@ -539,8 +555,10 @@ function applyExpandedState(listContainer, contentArea, buttonContainer) {
     buttonContainer.style.paddingBottom = '10px';
     buttonContainer.style.marginBottom = '4px';
     buttonContainer.style.gap = '6px';
-    if (buttonContainer.children[0]) buttonContainer.children[0].style.display = '';
-    if (buttonContainer.children[1]) buttonContainer.children[1].style.display = '';
+    // 恢复按钮文字和默认内边距
+    listContainer.querySelectorAll('.q-list-btn-label').forEach(function(el) { el.style.display = ''; });
+    if (buttonContainer.children[0]) buttonContainer.children[0].style.padding = '';
+    if (buttonContainer.children[1]) buttonContainer.children[1].style.padding = '';
 }
 
 // ── DeepSeek 风格胶囊按钮 ──
