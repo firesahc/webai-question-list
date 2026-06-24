@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.17.0
+// @version      1.17.1
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
@@ -450,16 +450,16 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
     const stopIcon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/><rect x="4.8" y="4.8" width="6.4" height="6.4" rx="1.2" fill="currentColor"/></svg>';
 
     const parseButton = createCapsuleButton(
-        isObserving ? stopIcon + '<span class="q-list-btn-label">停止</span>' : playIcon + '<span class="q-list-btn-label">解析</span>',
+        isObserving ? stopIcon : playIcon,
         true,
         () => {
             if (isObserving) {
                 stopObservation();
-                parseButton.innerHTML = playIcon + '<span class="q-list-btn-label">解析</span>';
+                parseButton.innerHTML = playIcon;
             } else {
                 const success = startObservation(contentArea);
                 if (success) {
-                    parseButton.innerHTML = stopIcon + '<span class="q-list-btn-label">停止</span>';
+                    parseButton.innerHTML = stopIcon;
                     const messageElements = parseElements();
                     if (messageElements.length > 0) {
                         contentArea.innerHTML = '';
@@ -470,6 +470,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
             }
         }
     );
+    parseButton.title = isObserving ? '停止解析' : '开始解析';
 
     // ── 折叠按钮：仿 DeepSeek capsule 样式（tertiary 标签色，更低调）──
     // 展开态 → 点击收起（双右箭头 »）
@@ -491,6 +492,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
             GM_setValue('isContentVisible', isContentVisible);
         }
     );
+    toggleButton.title = isContentVisible ? '收起列表' : '展开列表';
 
     buttonContainer.appendChild(parseButton);
     buttonContainer.appendChild(toggleButton);
@@ -499,7 +501,7 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
 function applyCollapsedState(listContainer, contentArea, buttonContainer) {
     // ── 仿 DeepSeek .e5bf614e 胶囊容器 ──
     listContainer.style.position = 'fixed';
-    listContainer.style.top = '12px';
+    listContainer.style.top = '70px';
     listContainer.style.right = '16px';
     listContainer.style.width = 'auto';
     listContainer.style.minWidth = '';
@@ -522,11 +524,9 @@ function applyCollapsedState(listContainer, contentArea, buttonContainer) {
     buttonContainer.style.paddingBottom = '0';
     buttonContainer.style.marginBottom = '0';
     buttonContainer.style.gap = '2px';
-    // 隐藏按钮文字，仅显示图标
-    listContainer.querySelectorAll('.q-list-btn-label').forEach(function(el) { el.style.display = 'none'; });
-    // 调整按钮内边距（更紧凑）
-    if (buttonContainer.children[0]) buttonContainer.children[0].style.padding = '0 5px';
-    if (buttonContainer.children[1]) buttonContainer.children[1].style.padding = '0 3px';
+    // 调整按钮内边距（更紧凑的图标按钮）
+    if (buttonContainer.children[0]) buttonContainer.children[0].style.padding = '0 6px';
+    if (buttonContainer.children[1]) buttonContainer.children[1].style.padding = '0 5px';
 }
 
 function applyExpandedState(listContainer, contentArea, buttonContainer) {
@@ -555,8 +555,7 @@ function applyExpandedState(listContainer, contentArea, buttonContainer) {
     buttonContainer.style.paddingBottom = '10px';
     buttonContainer.style.marginBottom = '4px';
     buttonContainer.style.gap = '6px';
-    // 恢复按钮文字和默认内边距
-    listContainer.querySelectorAll('.q-list-btn-label').forEach(function(el) { el.style.display = ''; });
+    // 恢复默认内边距
     if (buttonContainer.children[0]) buttonContainer.children[0].style.padding = '';
     if (buttonContainer.children[1]) buttonContainer.children[1].style.padding = '';
 }
