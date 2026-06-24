@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         deepseek-question-list
 // @namespace    https://github.com/firesahc/webai-question-list
-// @version      1.17.1
+// @version      1.17.2
 // @description  展示网页版deepseek当前对话的所有提问
 // @author       firesahc
 // @match        https://chat.deepseek.com/*
@@ -23,8 +23,8 @@ function createParserInit() {
     listContainer.id = 'xpath-parser-list';
     listContainer.style.cssText = `
         position: static;
-        top: 10px;
-        right: 50px;
+        top: 12px;
+        right: 65px;
         width: 260px;
         flex-shrink: 0;
         z-index: 1005;
@@ -501,8 +501,8 @@ function addTopButtons(buttonContainer, listContainer, contentArea) {
 function applyCollapsedState(listContainer, contentArea, buttonContainer) {
     // ── 仿 DeepSeek .e5bf614e 胶囊容器 ──
     listContainer.style.position = 'fixed';
-    listContainer.style.top = '70px';
-    listContainer.style.right = '16px';
+    listContainer.style.top = '12px';
+    listContainer.style.right = '65px';
     listContainer.style.width = 'auto';
     listContainer.style.minWidth = '';
     listContainer.style.maxHeight = 'none';
