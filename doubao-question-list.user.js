@@ -147,8 +147,8 @@ function parseElements() {
 
         // 如果旧版选择器无结果，使用新版选择器
         if (targetElements.length === 0) {
-            // 新版Doubao使用 data-message-id 标识消息容器
-            targetElements = document.querySelectorAll('[data-message-id]');
+            // 新版Doubao使用 data-message-id 标识消息容器，仅选用户问题（justify-end 右对齐）
+            targetElements = document.querySelectorAll('[data-message-id].justify-end');
         }
 
         if (targetElements.length === 0) {
